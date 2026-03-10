@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pokomon RNG</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1a1a2e;
+      color: #f0f0f0;
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+      position: relative;
+    }
+
+    .pokeball-bg {
+      position: fixed;
+      top: -150px;
+      right: -150px;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      border: 60px solid rgba(255,255,255,0.03);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .title-block {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+      color: #ffcb05;
+      text-shadow: 3px 3px 0 #cc0000, 5px 5px 0 rgba(0,0,0,0.3);
+      letter-spacing: 2px;
+    }
+
+    .pixel-icon {
+      color: #cc0000;
+      font-size: 1.2rem;
+    }
+
+    .subtitle {
+      color: #a0a8d0;
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.65rem;
+      padding: 0.75rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(1px); }
+
+    .btn-rng {
+      background: #cc0000;
+      color: #fff;
+      box-shadow: 0 4px 0 #880000;
+    }
+    .btn-rng:hover { box-shadow: 0 6px 0 #880000; }
+
+    .btn-sort {
+      background: #2b5ce6;
+      color: #fff;
+      box-shadow: 0 4px 0 #1a3a9e;
+    }
+    .btn-sort:hover { box-shadow: 0 6px 0 #1a3a9e; }
+
+    .btn-reset {
+      background: #3a3a5c;
+      color: #ccc;
+      box-shadow: 0 4px 0 #222240;
+    }
+    .btn-reset:hover { box-shadow: 0 6px 0 #222240; }
+
+    .shiny-alert {
+      background: linear-gradient(135deg, #f6d365, #fda085);
+      color: #1a1a2e;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.6rem;
+      text-align: center;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      animation: pulse 1s infinite alternate;
+      display: none;
+    }
+
+    @keyframes pulse {
+      from { box-shadow: 0 0 10px #fda085; }
+      to   { box-shadow: 0 0 30px #f6d365; }
+    }
+
+    .count-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.75rem;
+      color: #a0a8d0;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .count-badge {
+      background: #cc0000;
+      color: #fff;
+      border-radius: 20px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.8rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #6070a0;
+      line-height: 2;
+    }
+
+    .empty-state strong { color: #ffcb05; }
+
+    .pokedex-grid {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      background: #16213e;
+      border: 2px solid #2a2a4e;
+      border-radius: 12px;
+      padding: 1rem 0.75rem 0.75rem;
+      text-align: center;
+      position: relative;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #4a4a8e;
+    }
+
+    .card.shiny {
+      border-color: #f6d365;
+      background: linear-gradient(160deg, #1a1a3e, #2a2010);
+      box-shadow: 0 0 16px rgba(246, 211, 101, 0.25);
+    }
+
+    .shiny-badge {
+      font-size: 0.55rem;
+      font-family: 'Press Start 2P', monospace;
+      color: #f6d365;
+      margin-bottom: 0.5rem;
+    }
+
+    .card img {
+      image-rendering: pixelated;
+      width: 96px;
+      height: 96px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .pokemon-name {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.5rem;
+      color: #8090c0;
+      margin-top: 0.5rem;
+    }
+
+    .pokemon-id {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.5rem;
+      color: #8090c0;
+      margin-top: 0.3rem;
+    }
+
+    .type-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: center;
+      margin-top: 0.4rem;
+    }
+
+    .type-badge {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 20px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+
+    .special-badge {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.4rem;
+      margin-top: 0.35rem;
+      color: #ffcb05;
+    }
+
+    .stage-badge {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.65rem;
+      color: #7080a0;
+      margin-top: 0.2rem;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(200, 0, 0, 0.15);
+      border: 1px solid rgba(200, 0, 0, 0.3);
+      color: #cc4444;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1;
+    }
+
+    .delete-btn:hover {
+      background: rgba(200, 0, 0, 0.5);
+      color: #fff;
+    }
+
+    .searchbar {
+      color: #cc4444;
+      background: #16213e;
+      border: 2px solid #2a2a4e;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.9rem;
+      margin-bottom: 1.2rem;
+      width: 100%;
+      max-width: 300px;
+      display: block;
+    }
+
+    .warning
+
+    label[for="pokesearch"] {
+      display: block;
+      color: #a0a8d0;
+      font-size: 0.85rem;
+      margin-bottom: 0.4rem;
+      font-family: 'Press Start 2P'
+    }
+
+    @media (max-width: 480px) {
+      .pokedex-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+      h1 { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="pokeball-bg"></div>
+
+    <header>
+      <div class="title-block">
+        <span class="pixel-icon">⬤</span>
+        <h1>Pokemon RNG</h1>
+        <span class="pixel-icon">⬤</span>
+      </div>
+      <p class="subtitle">made by chamoisie</p>
+    </header>
+
+    <div class="controls">
+      <button class="btn btn-rng" onclick="Rng()">🎲 RNG!</button>
+      <button class="btn btn-sort" onclick="doSort()">🔢 Sort by number</button>
+      <button class="btn btn-reset" onclick="doReset()">🗑 Reset</button>
+    </div> <br>
+
+    <span class="warning"></span>
+
+    <div class="shiny-alert" id="shiny-alert">That's a shiny!</div>
+
+    <h2 class="count-title">
+      Pokemon storage
+      <span class="count-badge" id="count">0</span>
+    </h2>
+
+    <label for="pokesearch">Search...</label>
+    <input type="search" class="searchbar" id="pokesearch" name="q" oninput="renderGrid()" />
+
+    <div id="grid-container"></div>
+  </div>
+
+  <script>
+    const SHINY_CHANCE = 0.000001;
+    const TOTAL_POKEMON = 1025;
+    var cooldownCheck = false
+    var musiqueCheck = false
+    const musique = [
+      new Audio ('music1.mp3'),
+      new Audio ('music2.mp3'),
+      new Audio ('music3.mp3')
+    ]
+    
+    
+    
+
+    const TYPE = {
+      normal: 'Normal', fire: 'Fire', water: 'Water', electric: 'Electric',
+      grass: 'Grass', ice: 'Ice', fighting: 'Fighting', poison: 'Poison',
+      ground: 'Ground', flying: 'Flying', psychic: 'Psychic', bug: 'Bug',
+      rock: 'Rock', ghost: 'Ghost', dragon: 'Dragon', dark: 'Dark',
+      steel: 'Steel', fairy: 'Fairy',
+    };
+
+    const TYPE_COLOR = {
+      normal: '#818181', fire: '#e8622a', water: '#6890f0', electric: '#f8d030',
+      grass: '#78c850', ice: '#98d8d8', fighting: '#cc4e00', poison: '#a040a0',
+      ground: '#935b0e', flying: '#a890f0', psychic: '#ff2264', bug: '#a8b820',
+      rock: '#a55d05', ghost: '#5e399a', dragon: '#5116da', dark: '#181411',
+      steel: '#c0c0d9', fairy: '#ee99d4',
+    };
+
+    // Charger le pokédex depuis localStorage
+    let pokedex = JSON.parse(localStorage.getItem('pokedex') || '[]');
+
+    function save() {
+      localStorage.setItem('pokedex', JSON.stringify(pokedex));
+    }
+
+    function renderGrid() {
+      const search = document.getElementById('pokesearch').value.toLowerCase();
+      const container = document.getElementById('grid-container');
+      document.getElementById('count').textContent = pokedex.length;
+
+      const filtered = pokedex.filter(p => p.name.toLowerCase().startsWith(search));
+
+      if (pokedex.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>Your pokedex is empty</p>
+            <p>Press <strong>RNG!</strong> to catch your first pokemon!</p>
+          </div>`;
+        return;
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><p>No Pokémon found.</p></div>`;
+        return;
+      }
+
+      container.innerHTML = `<ul class="pokedex-grid">${filtered.map((p, i) => {
+        const realIndex = pokedex.indexOf(p);
+        const types = p.types
+          ? p.types.map(t => `<span class="type-badge" style="background:${TYPE_COLOR[t] || '#555'}">${TYPE[t] || t}</span>`).join('')
+          : '';
+        const special = (p.isLegendary || p.isMythical)
+          ? `<div class="special-badge">${p.isMythical ? '🌟 Mythical' : '👑 Legendary'}</div>`
+          : '';
+        const stage = p.stage
+          ? `<div class="stage-badge">${p.stage === 1 ? 'Base form' : p.stage === 2 ? 'Evo. 1' : 'Evo. 2'}</div>`
+          : '';
+        return `
+          <li class="card ${p.shiny ? 'shiny' : ''}">
+            ${p.shiny ? '<div class="shiny-badge">✨ Shiny</div>' : ''}
+            <img src="${p.path}" alt="${p.name}" width="96" height="96" />
+            <div class="pokemon-name">${p.name}</div>
+            <div class="pokemon-id">#${String(p.id).padStart(4, '0')}</div>
+            <div class="type-row">${types}</div>
+            ${special}
+            ${stage}
+            <button class="delete-btn" onclick="doDelete(${realIndex})" title="Delete">✕</button>
+          </li>`;
+      }).join('')}</ul>`;
+    }
+
+
+    async function pokename(id) {
+      try {
+        const [pokeRes, speciesRes] = await Promise.all([
+          fetch(`https://pokeapi.co/api/v2/pokemon/${id}`),
+          fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`),
+        ]);
+        const pokeData = await pokeRes.json();
+        const speciesData = await speciesRes.json();
+
+        const name = pokeData.name.charAt(0).toUpperCase() + pokeData.name.slice(1);
+        const types = pokeData.types.map(t => t.type.name);
+        const isLegendary = speciesData.is_legendary;
+        const isMythical = speciesData.is_mythical;
+
+        const evoRes = await fetch(speciesData.evolution_chain.url);
+        const evoData = await evoRes.json();
+        let stage = 1;
+        const chain = evoData.chain;
+        for (const evo1 of chain.evolves_to) {
+          if (evo1.species.name === pokeData.name) { stage = 2; break; }
+          for (const evo2 of evo1.evolves_to) {
+            if (evo2.species.name === pokeData.name) { stage = 3; break; }
+          }
+        }
+
+        pokedex = pokedex.map(p => p.id === id ? { ...p, name, types, isLegendary, isMythical, stage } : p);
+        save();
+        renderGrid();
+      } catch {
+        // Si l'API échoue, on garde le numéro
+      }
+    }
+
+    function Rng() {
+      if (musiqueCheck == false){
+      musiqueCheck = true
+      musique[Math.floor(Math.random() * musique.length)].play()
+      }
+      if (cooldownCheck == true) 
+      return
+
+      
+      const isShiny = Math.random() < SHINY_CHANCE;
+      const id = Math.floor(Math.random() * TOTAL_POKEMON) + 1;
+      const pokemon = {
+        id,
+        name: `#${String(id).padStart(4, '0')}`,
+        path: isShiny
+          ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`
+          : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
+        shiny: isShiny,
+        
+      };
+
+      pokedex.push(pokemon);
+      save();
+      renderGrid();
+      pokename(id);
+
+      // Afficher l'alerte shiny
+      const alert = document.getElementById('shiny-alert');
+      if (isShiny) {
+        alert.style.display = 'block';
+      } else {
+        alert.style.display = 'none';
+      }
+      cooldownCheck = true;
+      setTimeout(function(){cooldownCheck=false},670)
+        
+    }
+
+    function doDelete(index) {
+      pokedex.splice(index, 1);
+      save();
+      renderGrid();
+    }
+
+    function doReset() {
+      pokedex = [];
+      save();
+      renderGrid();
+      document.getElementById('shiny-alert').style.display = 'none';
+    }
+
+    function doSort() {
+      pokedex.sort((a, b) => a.id - b.id);
+      save();
+      renderGrid();}
+  
+
+    function doInvertSort() {
+      pokedex.sort((b, a) => b.id - a.id);
+      save();
+      renderGrid();
+    }
+
+    // Affichage initial
+    renderGrid();
+  </script>
+</body>
+</html>
