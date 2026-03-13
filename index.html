@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+
+<html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -252,6 +252,29 @@
       margin-top: 0.2rem;
     }
 
+    .fav_btn{
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: rgba(212, 29, 154, 0.31);
+      border: 1px solid rgba(125, 2, 71, 0.3);
+      color: #cc4444;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1;
+    }
+
+    .fav_btn:hover{
+      background: #ffc0cb;
+    }
+
     .delete-btn {
       position: absolute;
       top: 6px;
@@ -304,6 +327,14 @@
       .pokedex-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
       h1 { font-size: 1rem; }
     }
+
+    footer{
+      background-color: #3a3a5c;
+      text-align: center;
+      padding: 10px;
+      margin-top: 20px;
+      color:#161626 ;
+    }
   </style>
 </head>
 <body>
@@ -312,9 +343,9 @@
 
     <header>
       <div class="title-block">
-        <span class="pixel-icon">⬤</span>
+        <span class="pixel-icon"></span>
         <h1>Pokemon RNG</h1>
-        <span class="pixel-icon">⬤</span>
+        <span class="pixel-icon"></span>
       </div>
       <p class="subtitle">made by chamoisie</p>
     </header>
@@ -340,6 +371,8 @@
     <div id="grid-container"></div>
   </div>
 
+  <footer><div class="addon">If you have things to say, feel free to add me on discord: chamoisie or on <a href="https://github.com/Chamoisie">GitHub</a></div></footer>
+
   <script>
     const SHINY_CHANCE = 0.000001;
     const TOTAL_POKEMON = 1025;
@@ -350,6 +383,8 @@
       new Audio ('music2.mp3'),
       new Audio ('music3.mp3')
     ]
+    let croissant = false
+   
     
     
     
@@ -372,6 +407,7 @@
 
     // Charger le pokédex depuis localStorage
     let pokedex = JSON.parse(localStorage.getItem('pokedex') || '[]');
+    let favourites = JSON.parse(localStorage.getItem('favourites') || '[]');
 
     function save() {
       localStorage.setItem('pokedex', JSON.stringify(pokedex));
@@ -404,7 +440,7 @@
           ? p.types.map(t => `<span class="type-badge" style="background:${TYPE_COLOR[t] || '#555'}">${TYPE[t] || t}</span>`).join('')
           : '';
         const special = (p.isLegendary || p.isMythical)
-          ? `<div class="special-badge">${p.isMythical ? '🌟 Mythical' : '👑 Legendary'}</div>`
+          ? `<div class="special-badge">${p.isMythical ? ' Mythical' : ' Legendary'}</div>`
           : '';
         const stage = p.stage
           ? `<div class="stage-badge">${p.stage === 1 ? 'Base form' : p.stage === 2 ? 'Evo. 1' : 'Evo. 2'}</div>`
@@ -419,6 +455,7 @@
             ${special}
             ${stage}
             <button class="delete-btn" onclick="doDelete(${realIndex})" title="Delete">✕</button>
+            <button class="fav_btn" onclick = "doFav" onClick = background:#ffc0cb title = "Favourite">❤️</button>
           </li>`;
       }).join('')}</ul>`;
     }
@@ -483,7 +520,7 @@
       renderGrid();
       pokename(id);
 
-      // Afficher l'alerte shiny
+      // shiny alert
       const alert = document.getElementById('shiny-alert');
       if (isShiny) {
         alert.style.display = 'block';
@@ -509,15 +546,26 @@
     }
 
     function doSort() {
+      console.log(croissant)
+      if (croissant == false){
       pokedex.sort((a, b) => a.id - b.id);
       save();
-      renderGrid();}
-  
-
-    function doInvertSort() {
-      pokedex.sort((b, a) => b.id - a.id);
+      renderGrid();
+      croissant = true
+    }
+      else if (croissant == true){
+      pokedex.sort((a,b)=> b.id - a.id);
       save();
       renderGrid();
+      croissant = false
+      }
+      }
+
+    
+
+    function addFavourite(index){
+      if (favourites.somme(index => index.id == 25 && index.shiny == false))
+      favourites.push(index)
     }
 
     // Affichage initial
