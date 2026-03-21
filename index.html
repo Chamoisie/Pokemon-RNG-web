@@ -337,6 +337,10 @@
     }
   </style>
 </head>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/<unique-path>/script.js"></script>
 <body>
   <div class="app">
     <div class="pokeball-bg"></div>
@@ -494,7 +498,19 @@
       }
     }
 
-    function Rng() {
+    async function Rng() {
+      const NotNormal_chance = 0.068 
+      const isNotNormal = Math.random() < NotNormal_chance
+       const id = Math.floor(Math.random() * TOTAL_POKEMON) + 1;
+      
+      
+      const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+      const speciesData = await speciesRes.json();
+      while (speciesData.is_legendary && speciesData.is_mythical){
+        
+      }
+
+      
       if (musiqueCheck == false){
       musiqueCheck = true
       musique[Math.floor(Math.random() * musique.length)].play()
@@ -504,7 +520,7 @@
 
       
       const isShiny = Math.random() < SHINY_CHANCE;
-      const id = Math.floor(Math.random() * TOTAL_POKEMON) + 1;
+     
       const pokemon = {
         id,
         name: `#${String(id).padStart(4, '0')}`,
@@ -515,7 +531,7 @@
         
       };
 
-      pokedex.push(pokemon);
+      pokedex.unshift(pokemon);
       save();
       renderGrid();
       pokename(id);
@@ -566,6 +582,7 @@
     function addFavourite(index){
       if (favourites.somme(index => index.id == 25 && index.shiny == false))
       favourites.push(index)
+      console.log (favourites)
     }
 
     // Affichage initial
